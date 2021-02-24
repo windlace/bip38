@@ -1,0 +1,23 @@
+{
+  "name": "cast/bip38",
+  "description" : "BIP-38",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php-64bit": "^7.3",
+    "cast/ecdsa": "^0.3.0",
+    "cast/base-convert": "^0.3.0",
+    "phpaes/phpaes": "3.1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7"
+  },
+  "autoload": {
+    "classmap": [
+      "src/"
+    ],
+    "files": [
+      "src/functions.php"
+    ]
+  }
+}
