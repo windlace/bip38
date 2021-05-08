@@ -2,6 +2,7 @@
 
 namespace Cast\Crypto\bip38;
 
+use Exception;
 use function Cast\BaseConv\base58Encode;
 use function Cast\BaseConv\base58EncodeCheck;
 use function Cast\BaseConv\base58DecodeCheck;
@@ -9,6 +10,8 @@ use function Cast\Crypto\ECDSA\secp256k1\publicKeyVerbose;
 use PhpAes\Aes;
 
 const ADDRESS_PREFIX_BITCOIN_MINENET = '00';
+const NON_EC_BASE_58_CHECK_RANGE__WITHOUT_COMPRESSION = 'c0';
+const NON_EC_BASE_58_CHECK_RANGE__WITH_COMPRESSION = 'e0';
 const SCRYPT_PARAMS = [
     'N' => 16384,
     'r' => 8,
@@ -62,6 +65,8 @@ function addressVerbose(string $publicKey, string $NetworkIdByte)
 
 
 /**
+ * Bitcoin, non-EC-multiplied
+ *
  * @param $privateKey
  * @param $passphrase
  * @param $flags
@@ -71,7 +76,14 @@ function addressVerbose(string $publicKey, string $NetworkIdByte)
 function encrypt ($privateKey, $passphrase, $flags)
 {
     $PublicKey      = publicKeyVerbose($privateKey);
-    $addressVerbose = addressVerbose($PublicKey['compressed'], ADDRESS_PREFIX_BITCOIN_MINENET);
+    $compression    = substr($flags, 4, 2);
+
+    $publicKeyCompression = [
+        NON_EC_BASE_58_CHECK_RANGE__WITH_COMPRESSION => 'compressed',
+        NON_EC_BASE_58_CHECK_RANGE__WITHOUT_COMPRESSION => 'uncompressed'
+    ];
+
+    $addressVerbose = addressVerbose($PublicKey[$publicKeyCompression[$compression]], ADDRESS_PREFIX_BITCOIN_MINENET);
     $salt           = substr(hash256(hex2bin(hash256($addressVerbose['address']))), 0, 8);
     $scryptBuf      = scrypt($passphrase, hex2bin($salt), SCRYPT_PARAMS['N'], SCRYPT_PARAMS['r'], SCRYPT_PARAMS['p'], 64);
     $derivedHalf1   = substr($scryptBuf, 0, 64); // 7dcdd9078b432bd490c144ca1f5aa44c1e05bbce9ca8a9ab7243926f487218a4
